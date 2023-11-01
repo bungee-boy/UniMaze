@@ -74,6 +74,7 @@ void GetPlayer() {  // Get player postition
 			if (map[y][x] == 'P') {
 				playerX = x;
 				playerY = y;
+				return;
 			}
 		}
 	}
