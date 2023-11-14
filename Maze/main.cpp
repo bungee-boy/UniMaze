@@ -16,7 +16,7 @@ int gTimeDelayMS{ 100 };  // Delay to slow things down
 
 constexpr int kMazeX{ 20 }, kMazeY{ 20 };  // Maze size as constants
 
-const int numEnemies{ 5 }, enemySpeed{ 25 };  // Number of enemies and movement chance
+const int numEnemies{ 5 }, enemySpeed{ 5 };  // Number of enemies and movement chance
 const int cellWidth{ gScreenWidth / kMazeX }, cellHeight{ gScreenHeight / kMazeY };  // Cell size
 int radius = (cellWidth > cellHeight ? cellWidth : cellHeight) / 3;  // Circle radius
 int numGoals{ 1 };  // Number of goals (counter)
@@ -44,15 +44,15 @@ char map[kMazeX][kMazeY] = {
 	{ 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W' },
 };
 
-struct pos {
-	int x{ 0 };
-	int y{ 0 };
+struct Pos {
+	int x = 0;
+	int y = 0;
 };
 
-pos Player, Goal, Enemies[numEnemies];  // Player and Goal positions
+Pos Player, Goal;  // Player and Goal positions
 
-pos RandSpace() {  // Find random space
-	pos Rand;
+Pos RandSpace() {  // Find random space
+	Pos Rand;
 	while (true) {  // Search until space found
 		Rand.x = rand() % (kMazeX - 2) + 1;  // Efficient rand (doesnt check outer walls)
 		Rand.y = rand() % (kMazeY - 2) + 1;
@@ -62,49 +62,59 @@ pos RandSpace() {  // Find random space
 	}
 }
 
-void NewGoal() {  // Randomise new goal
-	while (true) {
-		pos Rand = RandSpace();
-		map[Rand.y][Rand.x] = 'G';
-		break;
+class Enemy {
+public:
+	Pos pos;
+	
+	Enemy() {  // Constructor method
+		pos = RandSpace();  // Randomise start position
 	}
-}
 
-void UpdateEnemies() {  // Enemy movement
-	for (int i = 0; i < numEnemies; i++) {
+	void AutoMove() {
 		if (rand() % enemySpeed == 0) {  // Decide to move
 			int direction = rand() % 4;  // Decide direction
-			map[Enemies[i].y][Enemies[i].x] = '.';  // Remove enemy
+			map[pos.y][pos.x] = '.';  // Remove from map
 			switch (direction) {
 			case 0:  // Up
-				Enemies[i].y--;  // Move enemy
-				if (map[Enemies[i].y][Enemies[i].x] == 'W' || map[Enemies[i].y][Enemies[i].x] == 'G')  // If wall or goal
-					Enemies[i].y++;  // Move back
+				pos.y--;  // Move
+				if (map[pos.y][pos.x] == 'W' || map[pos.y][pos.x] == 'G')  // If wall or goal
+					pos.y++;  // Move back
 				break;
 			case 1:  // Down
-				Enemies[i].y++;
-				if (map[Enemies[i].y][Enemies[i].x] == 'W' || map[Enemies[i].y][Enemies[i].x] == 'G')
-					Enemies[i].y--;
+				pos.y++;
+				if (map[pos.y][pos.x] == 'W' || map[pos.y][pos.x] == 'G')
+					pos.y--;
 				break;
 			case 2:  // Left
-				Enemies[i].x--;
-				if (map[Enemies[i].y][Enemies[i].x] == 'W' || map[Enemies[i].y][Enemies[i].x] == 'G')
-					Enemies[i].x++;
+				pos.x--;
+				if (map[pos.y][pos.x] == 'W' || map[pos.y][pos.x] == 'G')
+					pos.x++;
 				break;
 			case 3:  // Right
-				Enemies[i].x++;
-				if (map[Enemies[i].y][Enemies[i].x] == 'W' || map[Enemies[i].y][Enemies[i].x] == 'G')
-					Enemies[i].x--;
+				pos.x++;
+				if (map[pos.y][pos.x] == 'W' || map[pos.y][pos.x] == 'G')
+					pos.x--;
 				break;
 			}
 
-			if (map[Enemies[i].y][Enemies[i].x] == 'P') {  // Check if enemy hit player
+			if (map[pos.y] [pos.x] == 'P') {  // Check if enemy hit player
 				cout << "An enemy got you! You lose. (Score: " << GetElapsedTime() << ")" << endl;
 				Player.x = kMazeX + 1;
 				Player.y = kMazeY + 1;
 			}
-			map[Enemies[i].y][Enemies[i].x] = 'E';
+
+			map[pos.y][pos.x] = 'E';  // Set new position on map
 		}
+	}
+};
+
+Enemy Enemies[numEnemies];  // Array of enemies
+
+void NewGoal() {  // Randomise new goal
+	while (true) {
+		Pos Rand = RandSpace();
+		map[Rand.y][Rand.x] = 'G';
+		break;
 	}
 }
 
@@ -187,17 +197,14 @@ int main()
 	Goal = RandSpace();  // Random goal start
 	map[Goal.y][Goal.x] = 'G';
 
-	for (int i = 0; i < numEnemies; i++) {
-		Enemies[i] = RandSpace();  // Random enemy start
-		map[Enemies[i].y][Enemies[i].x] = 'E';
-	}
-
 	StartClock();  // Start score timer
 	while (UpdateFramework())
 	{
 
 		MovePlayer(GetLastKeyPressed());
-		UpdateEnemies();
+		for (int i = 0; i < numEnemies; i++) {  // Update enemies
+			Enemies[i].AutoMove();
+		}
 		DrawMaze();
 	}
 
