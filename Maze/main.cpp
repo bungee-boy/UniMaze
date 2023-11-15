@@ -66,103 +66,80 @@ void NewGoal() {  // Randomise new goal
 
 Player::Player() {  // Player constructor
 	pos = RandSpace();  // Randomise start position
-	map[pos.y][pos.x] = 'P';
+	map[pos.y][pos.x] = map_value;
 }
 
-void Player::Move(EKeyPressed key)  // Player move
-{  // Movement
-	if (key == EKeyPressed::eNone || pos.x > kMazeX && pos.y > kMazeY) { // If none or dead do nothing
-		return;
+Enemy::Enemy() {
+	map_block[2] = M_WALL, M_GOAL;
+	map_value = M_ENEMY;
+}
+
+bool Player::IsAllowed() {  // Test if allowed to move to test_pos
+	for (int i = 0; i < sizeof(map_block); i++) {
+		if (map[pos.y][pos.x] == map_block[i]) {
+			return false;
+		}
 	}
-	map[pos.y][pos.x] = '.';  // Remove player
+	return true;
+}
+
+void Player::Move(EKeyPressed key)  // Movement
+{  // Movement
+	if (key == EKeyPressed::eNone) // If none do nothing
+		return;
+
+	map[pos.y][pos.x] = M_SPACE;  // Remove player
 
 	switch (key) {
 	case EKeyPressed::eUp:  // Key pressed
 		pos.y--;  // Move player
-		if (map[pos.y][pos.x] == 'W')  // If wall move back
+		if (!IsAllowed())  // If wall move back
 			pos.y++;
 		break;
 	case EKeyPressed::eDown:
 		pos.y++;
-		if (map[pos.y][pos.x] == 'W')
+		if (!IsAllowed())
 			pos.y--;
 		break;
 	case EKeyPressed::eLeft:
 		pos.x--;
-		if (map[pos.y][pos.x] == 'W')
+		if (!IsAllowed())
 			pos.x++;
 		break;
 	case EKeyPressed::eRight:
 		pos.x++;
-		if (map[pos.y][pos.x] == 'W')
+		if (!IsAllowed())
 			pos.x--;
 		break;
 	}
 
-	if (map[pos.y][pos.x] == 'G') {  // Check if player hit goal
+	if (map[pos.y][pos.x] == M_GOAL) {  // Check if hit goal
 		cout << "You found goal number " << numGoals++ << " (Score: " << GetElapsedTime() << ")" << endl;
 		NewGoal();  // Generate new goal
 		StartClock(); // Restart timer for next score
 	}
-	else if (map[pos.y][pos.x] == 'E') {  // Check if player hit enemy
-		cout << "An enemy got you! You lose. (Score: " << GetElapsedTime() << ")" << endl;
-		pos.x = kMazeX + 1;
-		pos.y = kMazeY + 1;
+	else if (map[pos.y][pos.x] == M_ENEMY) {  // Check if hit enemy
+		cout << "An enemy got you! You lose. (Score: " << GetElapsedTime() << ")" << endl;  // Quit game
+		exit(0);
 	}
-	map[pos.y][pos.x] = 'P';  // Move player
-}
-
-void Enemy::Move(Player& player) {  // Enemy move
-	if (rand() % E_SPEED == 0) {  // Decide to move
-		int direction = rand() % 4;  // Decide direction
-		map[pos.y][pos.x] = '.';  // Remove from map
-		switch (direction) {
-		case 0:  // Up
-			pos.y--;  // Move
-			if (map[pos.y][pos.x] == 'W' || map[pos.y][pos.x] == 'G')  // If wall or goal
-				pos.y++;  // Move back
-			break;
-		case 1:  // Down
-			pos.y++;
-			if (map[pos.y][pos.x] == 'W' || map[pos.y][pos.x] == 'G')
-				pos.y--;
-			break;
-		case 2:  // Left
-			pos.x--;
-			if (map[pos.y][pos.x] == 'W' || map[pos.y][pos.x] == 'G')
-				pos.x++;
-			break;
-		case 3:  // Right
-			pos.x++;
-			if (map[pos.y][pos.x] == 'W' || map[pos.y][pos.x] == 'G')
-				pos.x--;
-			break;
-		}
-
-		if (map[pos.y][pos.x] == 'P') {  // Check if enemy hit player
-			cout << "An enemy got you! You lose. (Score: " << GetElapsedTime() << ")" << endl;
-			player.pos.x = kMazeX + 1;
-			player.pos.y = kMazeY + 1;
-		}
-
-		map[pos.y][pos.x] = 'E';  // Set new position on map
-	}
+	map[pos.y][pos.x] = map_value;  // Move
+	cout << map_value << endl;
 }
 
 void DrawMaze() {  // Draw the maze
 	for (int y = 0; y < kMazeY; y++) {  // Loop through entire maze
 		for (int x = 0; x < kMazeX; x++) {
 			switch (map[y][x]) {
-			case 'W':  // Wall
+			case M_WALL:  // Wall
 				ChangeColour(100, 100, 100);  // Grey
 				break;
-			case 'G':  // Goal
+			case M_GOAL:  // Goal
 				ChangeColour(50, 255, 50);  // Green
 				break;
-			case 'P':  // Player
+			case M_PLAYER:  // Player
 				ChangeColour(255, 255, 50);  // Yellow
 				break;
-			case 'E':  // Enemy
+			case M_ENEMY:  // Enemy
 				ChangeColour(255, 50, 50);  // Red
 				break;
 			default:  // Other
@@ -170,12 +147,12 @@ void DrawMaze() {  // Draw the maze
 			}
 
 			switch (map[y][x]) {
-			case 'W':  // Wall
-			case 'G':  // Goal
+			case M_WALL:  // Wall
+			case M_GOAL:  // Goal
 				DrawRectangle(x * WIDTH, y * HEIGHT, WIDTH, HEIGHT);  // Square
 				break;
-			case 'P':  // Player
-			case 'E':  // Enemy
+			case M_PLAYER:  // Player
+			case M_ENEMY:  // Enemy
 				DrawCircle(x * WIDTH + (radius / 2), y * HEIGHT + (radius / 2), radius);  // Circle
 				break;
 			default:  // None
@@ -191,14 +168,15 @@ int main()
 	Player player;  // Player
 	Enemy enemies[E_NUM];  // Array of enemies
 	Goal = RandSpace();  // Random goal start
-	map[Goal.y][Goal.x] = 'G';
+	map[Goal.y][Goal.x] = M_GOAL;
 
 	StartClock();  // Start score timer
 	while (UpdateFramework())
 	{
 		player.Move(GetLastKeyPressed());  // Player movement
 		for (int i = 0; i < E_NUM; i++) {  // Update enemies
-			enemies[i].Move(player);
+			if (rand() % E_SPEED == 0)  // Decide to move
+				enemies[i].Move(static_cast<EKeyPressed>(rand() % 4 + 1));  // Random direction (as EKeyPressed)
 		}
 		DrawMaze();
 	}
