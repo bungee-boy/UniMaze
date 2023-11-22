@@ -15,7 +15,9 @@ enum class EKeyPressed
 	eLeft,
 	eUp,
 	eRight,
-	eDown
+	eDown,
+	eSave,
+	eLoad
 };
 
 enum class EButton
