@@ -45,7 +45,7 @@ public:
 class Player {
 public:
 	Pos pos;
-	char map_block[1]{ M_WALL };  // Blocked map movements
+	std::vector<char> map_block;
 	char map_value{ M_PLAYER };  // Map identifier
 	Player();
 	bool IsAllowed();

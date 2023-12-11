@@ -15,7 +15,7 @@ int gScreenWidth{ 800 }, gScreenHeight{ 800 };  // Screen dimensions
 int gTimeDelayMS{ 100 };  // Delay to slow things down
 
 const int kMazeX{ 20 }, kMazeY{ 20 };  // Maze size as constants
-const int E_NUM{ 1 }, E_SPEED{ 5 };  // Number of enemies and movement chance
+const int E_NUM{ 5 }, E_SPEED{ 5 };  // Number of enemies and movement chance
 const int WIDTH{ gScreenWidth / kMazeX }, HEIGHT{ gScreenHeight / kMazeY };  // Cell size
 int radius = (WIDTH > HEIGHT ? WIDTH : HEIGHT) / 3;  // Circle radius
 int numGoals{ 1 };  // Number of goals (counter)
@@ -150,17 +150,18 @@ void NewGoal() {  // Randomise new goal
 
 Player::Player() {  // Player constructor
 	pos = RandSpace();  // Randomise start position
+	map_block.push_back(M_WALL);  // Blocked map movements
 	map.currLevel[pos.y][pos.x] = map_value;
 }
 
 Enemy::Enemy() {
-	map_block[2] = M_WALL, M_GOAL;
+	map_block.push_back(M_GOAL);  // Add goal to vector of blocked movements
 	map_value = M_ENEMY;
 	map.currLevel[pos.y][pos.x] = map_value;
 }
 
 bool Player::IsAllowed() {  // Test if allowed to move to test_pos
-	for (int i = 0; i < sizeof(map_block); i++) {
+	for (int i = 0; i < map_block.size(); i++) {
 		if (map.currLevel[pos.y][pos.x] == map_block[i]) {
 			return false;
 		}
