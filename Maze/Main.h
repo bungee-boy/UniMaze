@@ -11,6 +11,23 @@ struct Pos {
 Pos RandSpace();
 void NewGoal();
 
+class Player {
+public:
+	Player();
+	bool IsAllowed();
+	void Move(EKeyPressed key);
+	void MoveTo(Pos pos);
+protected:
+	Pos pos;  // Draw position
+	std::vector<char> map_block;  // Disallowed moves
+	char map_value{ M_PLAYER };  // Map identifier
+};
+
+class Enemy : public Player {  // inherits and uses polymorphism from Player
+public:
+	Enemy();
+};
+
 class Map {
 public:
 	std::string fileName{ "map_1.txt" };
@@ -35,26 +52,9 @@ public:
 		{ 'W', '.', 'W', '.', 'W', 'W', 'W', 'W', '.', 'W', '.', 'W', 'W', 'W', 'W', '.', 'W', 'W', '.', 'W' },
 		{ 'W', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', 'W' },
 		{ 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W' }};
-	Map();
 	void Save();
-	void Load();
+	void Load(Player& player, Enemy* enemies);
 	void Draw();
-	void Update(EKeyPressed key);
-};
-
-class Player {
-public:
-	Pos pos;
-	std::vector<char> map_block;
-	char map_value{ M_PLAYER };  // Map identifier
-	Player();
-	bool IsAllowed();
-	void Move(EKeyPressed key);
-};
-
-class Enemy : public Player {  // inherits and uses polymorphism from Player
-public:
-	Enemy();
 };
 
 #endif
