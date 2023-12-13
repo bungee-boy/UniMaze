@@ -146,11 +146,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="framework.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Framework.h" />
     <ClInclude Include="Main.h" />
   </ItemGroup>
   <ItemGroup>
