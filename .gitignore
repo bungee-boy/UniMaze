@@ -4,7 +4,9 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # Custom files
-gameSave.txt
+Maze/SFML/doc/
+Maze/SFML/examples/
+Maze/SFML/readme.md
 
 # User-specific files
 *.rsuser
